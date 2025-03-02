@@ -5,6 +5,32 @@
     </head>
     <body>
         <h1 id="header">Eduflow</h1>
-        <button id="create_categories">Create Categories</button>
+        <div id="categories-list">
+            <h2>Categories</h2>
+                {% for category in categories %}
+                    <a href="#">{{ category.name }}</a>
+                    <br>
+                {% endfor %}
+        </div>
+        <button id="create_categories" onclick="createCategory()">Create Categories</button>
     </body>
+    
+    <script>
+        function createCategory() {
+            const name = prompt("Enter category name:");
+            if (name) {
+                fetch('/create-category/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name: name })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.reload();
+                    }
+                });
+            }
+        }
+    </script>
 </html>
