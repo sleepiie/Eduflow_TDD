@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from django.test import LiveServerTestCase
+from kanbanboard.models import Category , Topic
 
 
 class NewVisitorTest(LiveServerTestCase):  
@@ -45,3 +46,35 @@ class NewVisitorTest(LiveServerTestCase):
             EC.presence_of_element_located((By.LINK_TEXT, "Learn management"))
         )
         self.assertTrue(category_link.is_displayed())
+
+    def test_can_create_topic(self):
+        Category.objects.create(name="Learn management")
+
+        self.browser.get(self.live_server_url)  
+        #แทนกดเข้าไปในหมวดหมู่
+        category_link = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.LINK_TEXT, "Learn management"))
+        )
+        category_link.click()
+
+        ###หน้าเว็บเปลี่ยนไปยังหน้า topic โดยมีชื่อ category อยู่ด้านบน
+        header_text = self.browser.find_element(By.ID, "header").text
+        self.assertIn("Learn management", header_text)
+
+        #แทนเจอปุ่ม “Create Topic” แทนเลยลองกดปุ่ม “Create Topic”
+        create_topic_btn = self.browser.find_element(By.ID , "create_topic").text
+        self.assertIn("Create Topic" , create_topic_btn)
+        #หน้าเว็บก็แสดงหน้าต่างสำหรับกรอกหัวข้อในหมวดหมู่นั้นขึ้นมา
+        create_topic_btn = self.browser.find_element(By.ID , "create_topic")
+        create_topic_btn.click()
+        alert = Alert(self.browser)
+        #แทนใส่ชื่อหัวข้อว่า “English”
+        alert.send_keys("English")
+        alert.accept()
+        #หน้าเว็บอัพเดทและแสดง “English” ขึ้นมาในหมวดหมู่นั้น
+        topic_link = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.LINK_TEXT, "English"))
+        )
+        self.assertTrue(topic_link.is_displayed())
+
+

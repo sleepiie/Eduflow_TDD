@@ -4,24 +4,24 @@
         <title>EduFlow</title>
     </head>
     <body>
-        <h1 id="header">Eduflow</h1>
+        <h1 id="header">{{category.name}}</h1>
         <div id="categories-list">
-            <h2>Categories</h2>
-                {% for category in categories %}
-                    <a href="/category/{{category.id}}">{{ category.name }}</a>
+            <h2>Topic</h2>
+                {% for topic in topics %}
+                    <a href="#">{{ topic.name }}</a>
                     <br>
                 {% endfor %}
         </div>
-        <button id="create_categories" onclick="createCategory()">Create Categories</button>
+        <button id="create_topic" onclick="createTopic()">Create Topic</button>
     </body>
-    
+
     <script>
-        function createCategory() {
-            const name = prompt("Enter category name:");
+        function createTopic() {
+            const name = prompt("Enter topic name:");
             if (name) {
-                fetch('/create-category/', {
+                fetch('/category/{{ category.id }}/create-topic/', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {'Content-Type': 'application/json',},
                     body: JSON.stringify({ name: name })
                 })
                 .then(response => response.json())
@@ -32,5 +32,5 @@
                 });
             }
         }
-    </script>
+      </script>
 </html>
