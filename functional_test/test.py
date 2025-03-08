@@ -77,4 +77,100 @@ class NewVisitorTest(LiveServerTestCase):
         )
         self.assertTrue(topic_link.is_displayed())
 
+    def test_can_create_and_manage_tasks(self):
+        category = Category.objects.create(name="Learn management")
+        topic = Topic.objects.create(category=category, name="English")
+        
+        #แทนกดเข้าไปในหัวข้อ English 
+        self.browser.get(f"{self.live_server_url}/topic/{topic.id}/")
+        #แทนเจอหน้า board ที่มี column todo, doing, done
+        todo_column = self.browser.find_element(By.ID, "todo_column")
+        doing_column = self.browser.find_element(By.ID, "doing_column")
+        done_column = self.browser.find_element(By.ID, "done_column")
+        
+        self.assertTrue(todo_column.is_displayed())
+        self.assertTrue(doing_column.is_displayed())
+        self.assertTrue(done_column.is_displayed())
+        
+        #แทนเจอปุ่ม "add task" สำหรับเพิ่มข้อมูลลง board แทนลองกดเพิ่มข้อมูล
+        add_task_btn = self.browser.find_element(By.ID, "add-task-btn")
+        self.assertIn("Add Task", add_task_btn.text)
+        add_task_btn.click()
+        
+        #หน้าเว็บแสดงป๊อปอัพสำหรับกรอกข้อมูลโดยมีให้กรอก title, due date และมีปุ่มสำหรับ save และ delete
+        modal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "task-modal"))
+        )
+        self.assertTrue(modal.is_displayed())
+        
+        #แทนกรอกข้อมูล title: อังกฤษ บท1, due date: 31-3-2025
+        title_input = self.browser.find_element(By.ID, "task-title")
+        due_date_input = self.browser.find_element(By.ID, "task-due-date")
+        save_btn = self.browser.find_element(By.ID, "save-btn")
+        
+        title_input.send_keys("อังกฤษ บท1")
+        due_date_input.send_keys("31-03-2025")
+        
+        #แทนกดปุ่ม save
+        save_btn.click()
+        
+        #หน้าเว็บอัพเดทและแสดง task ที่แทนเขียนขึ้นมาบนหน้าเว็บ
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, "task-modal"))
+        )
+        task = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[contains(text(), 'อังกฤษ บท1')]"))
+        )
+        self.assertTrue(task.is_displayed())
+        
+        due_date_text = self.browser.find_element(By.XPATH, "//div[contains(text(), '31-03-2025')]")
+        self.assertTrue(due_date_text.is_displayed())
+        
+        #แทนต้องการแก้ไขข้อมูลใน task แทนจึงกดเข้าไปที่ task นั้นอีกครั้ง
+        task.click()
+        
+        #หน้าเว็บแสดงป๊อปอัพสำหรับกรอกข้อมูลอีกครั้ง
+        modal = WebDriverWait(self.browser, 10).until(
+            EC.visibility_of_element_located((By.ID, "task-modal"))
+        )
+        self.assertTrue(modal.is_displayed())
+        
+        #แทนแก้ไขข้อมูลเป็น due date: 4-4-2025
+        due_date_input = self.browser.find_element(By.ID, "task-due-date")
+        save_btn = self.browser.find_element(By.ID, "save-btn")
 
+        due_date_input.clear()
+        due_date_input.send_keys("04-04-2025")
+        
+        #แทนกดปุ่ม save
+        save_btn.click()
+        
+        #หน้าเว็บทำการอัพเดท task ของแทนโดยวันที่จะเปลี่ยนจาก 31-3-2025 เป็น 4-4-2025
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.ID, "task-modal"))
+        )
+        
+        updated_due_date = WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[contains(text(), '04-04-2025')]"))
+        )
+        self.assertTrue(updated_due_date.is_displayed())
+        
+        #แทนต้องการลบ task แทนเลยกดเข้าไปใน task นั้นอีกครั้ง
+        task = self.browser.find_element(By.XPATH, "//div[contains(text(), 'อังกฤษ บท1')]")
+        task.click()
+        
+        #แทนกดปุ่ม delete
+        delete_btn = WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable((By.ID, "delete-btn"))
+        )
+        delete_btn.click()
+
+        alert = Alert(self.browser)
+        alert.accept()
+        
+        #หน้าเว็บอัพเดท task หายไป
+        WebDriverWait(self.browser, 10).until(
+            EC.invisibility_of_element_located((By.XPATH, "//div[contains(text(), 'อังกฤษ บท1')]"))
+        )
+        todo_tasks = self.browser.find_element(By.ID, "todo-tasks")
+        self.assertNotIn("อังกฤษ บท1", todo_tasks.text)

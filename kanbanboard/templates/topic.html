@@ -8,7 +8,7 @@
         <div id="categories-list">
             <h2>Topic</h2>
                 {% for topic in topics %}
-                    <a href="#">{{ topic.name }}</a>
+                    <a href="/topic/{{topic.id}}">{{ topic.name }}</a>
                     <br>
                 {% endfor %}
         </div>
